@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>8 Pool Fussion — Execution Flow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #5ea1ff;
+    --accent2: #7ee2b8;
+    --code-bg: #1c2028;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Devanagari", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  header {
+    padding: 40px 24px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  header h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+  }
+  header p {
+    color: var(--muted);
+    margin: 0;
+    max-width: 760px;
+  }
+  nav {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    padding: 0 24px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  nav a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--panel);
+  }
+  nav a:hover { border-color: var(--accent); }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  section {
+    margin-top: 48px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  section:first-of-type { border-top: none; }
+  h2 {
+    font-size: 20px;
+    margin: 24px 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent2);
+    background: rgba(126, 226, 184, 0.1);
+    border: 1px solid rgba(126, 226, 184, 0.3);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .desc {
+    color: var(--muted);
+    font-size: 14.5px;
+    margin: 0 0 18px;
+    max-width: 780px;
+  }
+  .diagram {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  .diagram .mermaid { display: flex; justify-content: center; }
+  code, .file {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent2);
+    white-space: nowrap;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td.desc-cell { color: var(--text); }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .group-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin: 26px 0 4px;
+    font-weight: 600;
+  }
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 24px 60px;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>8 Pool Fussion — Execution Flow</h1>
+  <p>यह डॉक्यूमेंट <span class="file">Assets/Scripts/</span> के अंदर मौजूद असली कोड से बनाया गया है — गेमप्ले के मुख्य फ़्लो को फ़ाइल-वाइज़ diagram के ज़रिए समझाता है, और हर ज़रूरी स्क्रिप्ट का काम (responsibility) क्या है, वो भी नीचे टेबल में बताया गया है।</p>
+</header>
+
+<nav>
+  <a href="#files">फ़ाइल-वाइज़ विवरण</a>
+  <a href="#init">Initialization</a>
+  <a href="#shot">Shot Sequence</a>
+  <a href="#potted">Ball Potted / Tray</a>
+  <a href="#scenes">Scene Navigation</a>
+</nav>
+
+<main>
+
+  <section id="files">
+    <h2>फ़ाइल-वाइज़ विवरण <span class="tag">हर स्क्रिप्ट क्या करती है</span></h2>
+    <p class="desc">
+      नीचे हर मुख्य स्क्रिप्ट का नाम और उसका असली काम दिया गया है — फ़ाइल के नाम और मेथड्स जानबूझकर अंग्रेज़ी में रखे गए हैं क्योंकि वही कोड में असल में लिखे हैं, बाकी सब समझाया गया है हिंदी में।
+    </p>
+
+    <div class="group-label">कोर गेमप्ले (Assets/Scripts/Gameplay/)</div>
+    <table>
+      <tr><th>फ़ाइल</th><th>क्या करती है</th></tr>
+      <tr>
+        <td class="file">GameManager.cs</td>
+        <td class="desc-cell">पूरे गेमप्ले का केंद्रीय (root) script है। इसमें balls array, cue ball, दोनों players (Player1/Player2) की जानकारी, और मौजूदा game state (<code>isGameOn</code>, <code>isStrikeDone</code>, <code>isItCueballBreak</code>, <code>isGameOver</code> वग़ैरह) रखे जाते हैं। बाकी सभी स्क्रिप्ट्स इसी के <code>gameManager</code> reference के ज़रिए एक-दूसरे तक पहुँचती हैं — यानी ये पूरे सिस्टम की "हब" है।</td>
+      </tr>
+      <tr>
+        <td class="file">BoardManager.cs</td>
+        <td class="desc-cell">Turn resolution और पूल के rules संभालता है। हर frame में सभी balls की velocity check करता है; जब table पर सब कुछ रुक जाता है तो <code>CheckGameRules()</code> / <code>CheckBreakShotRules()</code> चलता है, जो तय करता है कि turn switch होगा या नहीं, foul हुआ या नहीं, और potted balls को tray में भेजता है (<code>PocketedBallDetails</code>, <code>SendBallToTray</code>)।</td>
+      </tr>
+      <tr>
+        <td class="file">CueStickManager.cs</td>
+        <td class="desc-cell">Cue stick की aiming, drag से power set करना, spin, और आख़िर में <code>StrikeTheBall()</code> से असली शॉट लगाना — यह सब यहीं होता है। Player जब उंगली/माउस छोड़ता है, यही script cue ball पर force apply करती है।</td>
+      </tr>
+      <tr>
+        <td class="file">CueBallManager.cs</td>
+        <td class="desc-cell">Cue ball का "ball in hand" placement संभालता है — जब cue ball pocket हो जाती है (scratch), तो <code>ResetCueBall()</code> उसे वापस table के सही position पर रखता है और player को दोबारा placement की अनुमति देता है।</td>
+      </tr>
+      <tr>
+        <td class="file">HudManager.cs</td>
+        <td class="desc-cell">UI अपडेट करता है — दोनों players के score/timer/remaining-balls list, game-over screen, वग़ैरह। साथ ही scene navigation (<code>SceneManager.LoadScene</code>) भी यहीं से होता है, जैसे MainMenuScene ↔ GameplayScene।</td>
+      </tr>
+      <tr>
+        <td class="file">BallCollisionHandler.cs</td>
+        <td class="desc-cell">हर object ball (Solid/Stripe) पर लगी होती है। Collision की physics (कब कितना force transfer होगा, spin/rotation), और ball potted होने के बाद tray तक slide करने का animation (<code>StartTrayMovementForPottedBall</code>) यहीं संभलता है।</td>
+      </tr>
+      <tr>
+        <td class="file">CueBallCollisionHandler.cs</td>
+        <td class="desc-cell">सिर्फ़ cue ball के लिए अलग collision handler — cushion से टकराना, spin, और जब यह पहली बार किसी ball से टकराती है तब force transfer का calculation। BallCollisionHandler से अलग script है क्योंकि cue ball का behaviour object balls से अलग होता है (player-controlled)।</td>
+      </tr>
+      <tr>
+        <td class="file">PocketInfo.cs</td>
+        <td class="desc-cell">एक बहुत छोटी सी स्क्रिप्ट, table के हर पॉकेट (6 होते हैं) पर लगी होती है। जब कोई ball उसके trigger collider में गिरती है, यह सिर्फ़ एक लाइन में <code>boardManager.PocketedBallDetails(collision)</code> को call कर देती है।</td>
+      </tr>
+    </table>
+
+    <div class="group-label">QuickFire और LuckyShot मोड</div>
+    <table>
+      <tr><th>फ़ाइल पैटर्न</th><th>क्या करती है</th></tr>
+      <tr>
+        <td class="file">QuickFireModeGamePlay/*QuickFireMode.cs</td>
+        <td class="desc-cell">ऊपर बताई गई Gameplay स्क्रिप्ट्स की अपनी अलग कॉपी — जैसे <code>BoardManagerQuickFireMode.cs</code>, <code>BallCollisionHandlerQuickFireMode.cs</code>। ये QuickFireScene के लिए इस्तेमाल होती हैं, logic लगभग वैसा ही है बस स्वतंत्र (independent) स्क्रिप्ट्स के रूप में duplicate किया गया है।</td>
+      </tr>
+      <tr>
+        <td class="file">LuckyShotGamePlay/*LuckyShot.cs</td>
+        <td class="desc-cell">इसी तरह LuckyShotScene के लिए अलग duplicate स्क्रिप्ट्स — जैसे <code>BoardManagerLuckyShot.cs</code>, <code>CueBallCollisionHandlerLuckyShot.cs</code>, साथ में <code>LuckyShotManager.cs</code> जो lucky-shot इनाम/free-shot वाला extra logic संभालता है।</td>
+      </tr>
+    </table>
+  </section>
+
+  <section id="init">
+    <h2>Script Initialization <span class="tag">Gameplay/</span></h2>
+    <p class="desc">
+      <span class="file">GameManager.cs</span> ही मुख्य केंद्र है — बाकी हर script के पास एक public <code>gameManager</code> reference होता है, और वो अपना data (balls array, cue ball, current player, board/cue-stick/HUD manager references) वहीं से पढ़ते हैं। कोई भी script सीधे दूसरे को ढूंढता नहीं — सब GameManager के ज़रिए जुड़े हैं।
+    </p>
+    <div class="diagram"><pre class="mermaid">
+graph TD
+    GM["GameManager.cs<br/>(balls, cueBall, players, state)"]
+    BM["BoardManager.cs<br/>(pot rules, turn resolution)"]
+    CSM["CueStickManager.cs<br/>(aim, power, StrikeTheBall)"]
+    CBM["CueBallManager.cs<br/>(ball-in-hand, ResetCueBall)"]
+    HM["HudManager.cs<br/>(UI, scene loads)"]
+    BCH["BallCollisionHandler.cs<br/>(per object-ball physics)"]
+    CBCH["CueBallCollisionHandler.cs<br/>(cue-ball physics)"]
+    PI["PocketInfo.cs<br/>(one per pocket trigger)"]
+
+    GM -->|"public gameManager ref"| BM
+    GM -->|"public gameManager ref"| CSM
+    GM -->|"public gameManager ref"| CBM
+    GM -->|"public gameManager ref"| HM
+    BM -->|"gameManager.cueStickManager"| CSM
+    BM -->|"gameManager.cueBallManager"| CBM
+    BM -->|"gameManager.hudManager"| HM
+    BCH -->|"gameManager.cueStickManager"| CSM
+    CBCH -->|"hudManager.gameManager.boardManager"| BM
+    PI -->|"boardManager.PocketedBallDetails()"| BM
+
+    style GM fill:#5ea1ff,stroke:#5ea1ff,color:#0f1115
+    </pre></div>
+  </section>
+
+  <section id="shot">
+    <h2>Shot → Turn Resolution Sequence</h2>
+    <p class="desc">
+      Player के शॉट छोड़ने से लेकर turn असल में switch होने तक की पूरी sequence। <span class="file">BoardManager.Update()</span> हर frame में हर ball की <code>Rigidbody.linearVelocity</code> check करता है — पूरा rules pipeline तभी चलता है जब table पर सब कुछ <code>0.005</code> से नीचे velocity पर आ जाए, यानी पूरी तरह रुक जाए।
+    </p>
+    <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+    participant P as Player
+    participant CSM as CueStickManager
+    participant CB as CueBall<br/>(CueBallCollisionHandler)
+    participant OB as Object Ball<br/>(BallCollisionHandler)
+    participant PI as PocketInfo
+    participant BM as BoardManager
+    participant GM as GameManager
+    participant HM as HudManager
+
+    P->>CSM: drag to aim + release
+    CSM->>CB: rb.AddForce(...)
+    CSM->>GM: CurrentGameState = isStrikeDone / isItCueballBreakDone
+    CB->>OB: OnCollisionEnter (cue strikes ball)
+    OB->>PI: OnCollisionEnter (ball falls into pocket)
+    PI->>BM: PocketedBallDetails(collision)
+    BM->>BM: UpdatePottedBallInTray / ForBreakShot
+    Note over BM: Update() polls ball velocities every frame
+    BM->>BM: isTurnCompleted == true
+    BM->>BM: CheckGameRules() / CheckBreakShotRules()
+    BM->>GM: SwitchPlayerTurn() / RestartTimer() / SetCueBallInHand()
+    BM->>BM: StartCoroutine(SetBallPositionInTray)
+    BM->>HM: UpdatePlayer1BallListDisplay() / UpdatePlayer2BallListDisplay()
+    GM-->>HM: CurrentGameState change drives UI refresh
+    </pre></div>
+  </section>
+
+  <section id="potted">
+    <h2>Ball-Potted → Tray Pipeline</h2>
+    <p class="desc">
+      जिस पल कोई ball pocket में गिरती है, उससे लेकर tray rack में visually settle होने तक — एक ball के साथ क्या-क्या होता है, step by step।
+    </p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A["Ball / CueBall Pocket के trigger collider में जाती है"] --> B["PocketInfo.OnCollisionEnter"]
+    B --> C["BoardManager.PocketedBallDetails(collision)"]
+    C --> D{"collision.collider.tag"}
+    D -->|"CueBall"| E["cueBallPotted = true"]
+    D -->|"Ball"| F["currentlyPottedBalls.Add(ball)"]
+    F --> G{"CurrentGameState ==<br/>isItCueballBreakDone?"}
+    G -->|"नहीं"| H["UpdatePottedBallInTray:<br/>velocity zero, SetActive(false)"]
+    G -->|"हाँ"| I["UpdatePottedBallInTrayForBreakShot:<br/>velocity zero, SetActive(false),<br/>solid/stripe list से remove"]
+    H --> J["BoardManager.Update() तब तक wait करता है<br/>जब तक हर ball की velocity settle न हो जाए"]
+    I --> J
+    J --> K["CheckGameRules() / CheckBreakShotRules()"]
+    K --> L["StartCoroutine(SetBallPositionInTray)"]
+    L --> M["हर potted ball के लिए:<br/>pottedStartPosition पर reposition,<br/>SetActive(true)"]
+    M --> N["BallCollisionHandler.StartTrayMovementForPottedBall(target)"]
+    N --> O["Update(): tray slot की तरफ़ Lerp<br/>+ rolling rotation"]
+
+    style C fill:#5ea1ff,stroke:#5ea1ff,color:#0f1115
+    style L fill:#7ee2b8,stroke:#7ee2b8,color:#0f1115
+    </pre></div>
+  </section>
+
+  <section id="scenes">
+    <h2>Scene Navigation</h2>
+    <p class="desc">
+      कोडबेस में मिले हर live <code>SceneManager.LoadScene(...)</code> call के आधार पर बनाया गया — कौन-सा mode कहाँ से किस scene में जाता है। नीचे दिए scene names उनके <span class="file">Assets/Scenes/Final/</span> वाले असली short names हैं।
+    </p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+    MM["MainMenuScene"]
+    GS["GameplayScene"]
+    QF["QuickFireScene"]
+    LS["LuckyShotScene"]
+
+    MM -->|"PlayLocalScreen.cs"| GS
+    MM -->|"PlayLocalScreen.cs"| QF
+    GS -->|"HudManager.cs (win / quit)"| MM
+    GS -->|"RematchGameScreen.cs"| GS
+    QF -->|"HudManagerQuickFireMode.cs /<br/>QuickFireModeManager.cs"| MM
+    QF -->|"HudManagerQuickFireMode.cs"| GS
+    LS -->|"HudManagerLuckyShot.cs /<br/>LuckyShotManager.cs"| MM
+    LS -->|"HudManagerLuckyShot.cs"| GS
+
+    style MM fill:#5ea1ff,stroke:#5ea1ff,color:#0f1115
+    </pre></div>
+
+    <table>
+      <tr><th>Source फ़ाइल</th><th>किस scene में जाती है</th></tr>
+      <tr><td class="file">UI/PlayLocalScreen.cs</td><td class="file">GameplayScene, QuickFireScene</td></tr>
+      <tr><td class="file">UI/LuckyShotScreen.cs</td><td class="file">LuckyShotScene</td></tr>
+      <tr><td class="file">Gameplay/HudManager.cs</td><td class="file">MainMenuScene, GameplayScene</td></tr>
+      <tr><td class="file">Prasanth/Scripts/RematchGameScreen.cs</td><td class="file">GameplayScene</td></tr>
+      <tr><td class="file">QuickFireModeGamePlay/HudManagerQuickFireMode.cs</td><td class="file">MainMenuScene, GameplayScene</td></tr>
+      <tr><td class="file">QuickFireModeGamePlay/QuickFireModeManager.cs</td><td class="file">MainMenuScene, QuickFireScene</td></tr>
+      <tr><td class="file">LuckyShotGamePlay/HudManagerLuckyShot.cs</td><td class="file">MainMenuScene, GameplayScene</td></tr>
+      <tr><td class="file">LuckyShotGamePlay/LuckyShotManager.cs</td><td class="file">MainMenuScene</td></tr>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  यह डॉक्यूमेंट <span class="file">Assets/Scripts/</span> के असली कोड से generate किया गया है — QuickFire और LuckyShot modes ऊपर बताए गए Gameplay flow को अपनी अलग parallel स्क्रिप्ट्स (<span class="file">BoardManagerQuickFireMode.cs</span>, <span class="file">BoardManagerLuckyShot.cs</span> वग़ैरह) के ज़रिए दोहराते हैं।
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background: '#171a21',
+      primaryColor: '#1c2028',
+      primaryTextColor: '#e6e8ec',
+      primaryBorderColor: '#2a2f3a',
+      lineColor: '#5ea1ff',
+      secondaryColor: '#1c2028',
+      tertiaryColor: '#1c2028'
+    },
+    flowchart: { curve: 'basis' }
+  });
+</script>
+
+</body>
+</html>
