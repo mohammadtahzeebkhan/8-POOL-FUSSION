@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="BestHTTP.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+</Solution>
